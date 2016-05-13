@@ -1,0 +1,37 @@
+<?php
+
+/**
+ * Implements hook_cron().
+ */
+function d8_stock_exchange_cron() {
+  $blocks = \Drupal::entityTypeManager()
+    ->getStorage('block_content')
+    ->loadByProperties(array('type' => 'stock_exchange_rate_card'));
+
+  // Update last price and change field value for each block.
+  foreach($blocks as $block) {
+    $last_price = 'N/A';
+    $change = 'N/A';
+    $currency_info = _get_currency_info($block->field_symbol->value);
+    if (isset($currency_info->Status) && $currency_info->Status == "SUCCESS") {
+      $last_price = $currency_info->LastPrice;
+      $change = $currency_info->Change;
+    }
+    $block->field_last_price = $last_price;
+    $block->field_change = $change;
+    $block->save();
+  }
+}
+
+/**
+ * Funciton to get stock exchange currency information from API.
+ */
+function _get_currency_info($symbol) {
+  $api_url = "http://dev.markitondemand.com/MODApis/Api/v2/Quote/json?symbol=$symbol&callback=myFunction";
+  $client = new GuzzleHttp\Client();
+  $request = $client->get($api_url);
+  $response = $request->getBody();
+  $response_json = json_decode((string)$response);
+
+  return $response_json;
+}

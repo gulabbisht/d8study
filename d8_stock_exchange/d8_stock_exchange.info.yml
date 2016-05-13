@@ -1,0 +1,5 @@
+name: D8 Stock Exchange Block
+type: module
+description: Stock Exchange Block for currency.
+core: 8.x
+package: Custom
